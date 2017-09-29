@@ -153,8 +153,11 @@
 
             Write("SerializeCB.expressions",
                 new SerializerDebugView<CompactBinaryWriter<OutputStream>>(typeof(HourlyElementAdUsage)));
+
+            /*
             Write("SerializeCB_with.expressions",
                 new SerializerDebugView<CompactBinaryWriter<OutputStream>>(typeof(StructWithBlobs)));
+                */
 
             /*
             Write("SerializeXml.expressions",
@@ -162,7 +165,8 @@
                 */
 
             var temp = new HourlyElementAdUsage();
-            temp.TOTALAMOUNT = new decimal(23.23);
+            temp.Numbers = new List<decimal> { new decimal(12.12), new decimal(23.23)};
+            //temp.TOTALAMOUNT = new decimal(23.23);
 
             var outputStream = new OutputBuffer();
             var writer = new CompactBinaryWriter<OutputBuffer>(outputStream);
@@ -188,8 +192,13 @@
     [System.CodeDom.Compiler.GeneratedCode("gbc", "0.10.0.0")]
     public partial class HourlyElementAdUsage
     {
+        /*
         [global::Bond.Id(16), global::Bond.Type(typeof(global::Bond.Tag.blob))]
         public System.Decimal TOTALAMOUNT { get; set; }
+        */
+
+        [global::Bond.Id(1), global::Bond.Type(typeof(List<global::Bond.Tag.blob>))]
+        public List<decimal> Numbers { get; set; }
 
         public HourlyElementAdUsage()
             : this("FastBITest.Entity.HourlyElementAdUsage", "HourlyElementAdUsage")
@@ -197,7 +206,8 @@
 
         protected HourlyElementAdUsage(string fullName, string name)
         {
-            TOTALAMOUNT = new System.Decimal();
+            //TOTALAMOUNT = new System.Decimal();
+            Numbers = new List<decimal>();
         }
     }
 

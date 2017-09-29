@@ -214,6 +214,11 @@ namespace Bond.Expressions
                                 Value(valueParser, elementType),
                             writer.WriteItemEnd()));
 
+                    /*
+                    var temp = (BinaryExpression) valueParser.ReaderValue;
+                    var left = temp.Left;
+                    */
+
                     var blob = parser.Blob(count);
                     if (blob != null)
                     {

@@ -100,7 +100,27 @@ namespace Bond.Expressions
             var fieldId = Expression.Constant(id);
             var fieldType = Expression.Constant(fieldSchemaType.GetBondDataType());
             var fieldValue = DataExpression.PropertyOrField(structVar, schemaField.Name);
-            var parser = new ObjectParser(this, fieldValue, fieldSchemaType);
+
+            ObjectParser parser = null;
+
+            Expression blob = null;
+            ParameterExpression arraySegment = null;
+
+            // To avoid calling multiple times Convert on the same Blob with alias
+            // we must construct a new ObjectParser with the expected return type of
+            // of the first call to Convert 
+            if (fieldSchemaType.IsBondBlob())
+            {
+                blob = typeAlias.Convert(fieldValue, fieldSchemaType);
+                arraySegment = Expression.Variable(blob.Type, "arraySegment");
+
+                if (blob.Type != fieldValue.Type)
+                {
+                    parser = new ObjectParser(this, arraySegment, arraySegment.Type);
+                }
+            }
+
+            parser = parser ?? new ObjectParser(this, fieldValue, fieldSchemaType);
 
             var processField = field != null
                 ? field.Value(parser, fieldType)
@@ -121,9 +141,14 @@ namespace Bond.Expressions
 
                 if (fieldSchemaType.IsBondBlob())
                 {
-                    cannotOmit = Expression.NotEqual(
-                        typeAlias.Convert(fieldValue, fieldSchemaType), 
+                    var notEqual = Expression.NotEqual(
+                        arraySegment, 
                         Expression.Default(typeof(ArraySegment<byte>)));
+
+                    return Expression.Block(
+                        new[] { arraySegment },
+                        Expression.Assign(arraySegment, blob),
+                        PrunedExpression.IfThenElse(notEqual,processField,omitField));
                 }
                 else if (fieldSchemaType.IsBondContainer())
                 {
@@ -149,6 +174,13 @@ namespace Bond.Expressions
                 return BlobContainer(handler);
 
             var itemType = schemaType.GetValueType();
+
+            /*
+            if (itemType.IsBondBlob())
+            {
+                itemType =  typeof(ArraySegment<byte>);
+            }
+            */
 
             ContainerItemHandler itemHandler = (item, next, count) => handler(
                 new ObjectParser(this, item, itemType),
@@ -351,8 +383,10 @@ namespace Bond.Expressions
             var blob = typeAlias.Convert(value, schemaType);
             var item = Expression.ArrayIndex(Expression.Property(arraySegment, "Array"), Expression.PostIncrementAssign(index));
 
+            var parser = new ObjectParser(this, item, typeof(sbyte));
+
             var loop = handler(
-                new ObjectParser(this, item, typeof(sbyte)),
+                parser,
                 Expression.Constant(BondDataType.BT_INT8),
                 Expression.LessThan(index, end),
                 count);
