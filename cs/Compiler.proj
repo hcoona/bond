@@ -56,4 +56,6 @@
 
   <Target Name="Build" DependsOnTargets="CoreBuild;AfterBuild" />
 
+  <Target Name="GetNativeManifest" />
+
 </Project>
