@@ -68,7 +68,10 @@
     <Copy SourceFiles="$(IntermediateOutputPath)\build\gbc\gbc.exe" DestinationFolder="$(ProjectDir)\tools\" />
   </Target>
 
-  <Target Name="ExternalBuild" DependsOnTargets="CoreExternalBuild" />
+  <Target Name="ExternalBuild" DependsOnTargets="CoreExternalBuild" Condition="'$(OS)' == 'Windows_NT'" />
+  <Target Name="ExternalBuild" Condition="'$(OS)' != 'Windows_NT'">
+    <Message Text="Skip external building because it's only for Windows" Importance="High" />
+  </Target>
 
   <Target Name="Build" DependsOnTargets="ExternalBuild" />
 
